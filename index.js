@@ -24,9 +24,9 @@ app.post("/api/shorturl", (req, res) => {
     dns.lookup(look.hostname, (err) => {
       if (err) {res.json({error: "invalid url"})}
       else {
-        store.push(look);
+        store.push(look.href);
         res.json({
-          original_url: req.body.url,
+          original_url: look.href,
           short_url: (store.length)
         });
       }
@@ -34,12 +34,8 @@ app.post("/api/shorturl", (req, res) => {
   })
 
 app.get("/api/shorturl/:id", (req, res) => {
-  const resolve = store[parseInt(req.params.id)-1];
-  if (resolve) {
-    return res.redirect(resolve.href);
-  } else {
-    return res.json({error: "No short url found for the given input"});
-  }
+  const resolve = store[parseInt(req.params.id) - 1];
+  return resolve ? res.redirect(resolve) : res.json({error: "invalid url"});
 });
 
 app.listen(port, function() {
