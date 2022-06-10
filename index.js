@@ -11,7 +11,6 @@ const port = process.env.PORT || 3000;
 
 app.use(cors());
 
-app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
 
 app.use('/public', express.static(`${process.cwd()}/public`));
@@ -21,26 +20,26 @@ app.get('/', function(req, res) {
 });
 
 app.post("/api/shorturl", (req, res) => {
-  console.log(req)
-  if (req.body.url) {
-    dns.lookup(req.body.url, (err) => {
-      if (err) {res.json({error: "invalid url dns lookup"})}
+    const look = new URL(req.body.url);
+    dns.lookup(look.hostname, (err) => {
+      if (err) {res.json({error: "invalid url"})}
       else {
-        const url = old.toString();
-        store.push(url);
+        store.push(look);
         res.json({
-          original_url: url,
+          original_url: req.body.url,
           short_url: (store.length)
         });
       }
     });
-  } else {
-    res.json({error: "invalid url parameter"});
-  }
-});
+  })
 
-app.get("/api/shorturl/:id", (req, res) => {  
-  return res.redirect(store[parseInt(req.params.id) - 1]);
+app.get("/api/shorturl/:id", (req, res) => {
+  const resolve = store[parseInt(req.params.id)-1];
+  if (resolve) {
+    return res.redirect(resolve.href);
+  } else {
+    return res.json({error: "No short url found for the given input"});
+  }
 });
 
 app.listen(port, function() {
